@@ -102,7 +102,7 @@ func unmarshalCaddyfile(d *caddyfile.Dispenser, _ any) (any, error) {
 	return struct{}{}, nil
 }
 
-// init registers the caddy module and the image_filter directive.
+// init registers the caddy module and the markdown_ex directive.
 func init() {
 	httpcaddyfile.RegisterGlobalOption("markdown_ex", unmarshalCaddyfile)
 	caddy.RegisterModule(MarkdownEx{})
