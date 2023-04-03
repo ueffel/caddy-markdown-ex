@@ -44,7 +44,7 @@ func (m *MarkdownEx) CustomTemplateFunctions() template.FuncMap {
 }
 
 // funcMarkdown uses a custom markdown renderer that includes
-//   - the html class "task-list-item" for item if a TaskList
+//   - the html class "task-list-item" for items of a TaskList
 //   - support for mermaidJS syntax
 func funcMarkdown(input any) (string, error) {
 	inputStr := caddy.ToString(input)
