@@ -20,8 +20,9 @@ import (
 )
 
 var (
-	bufPool = sync.Pool{New: func() any { return new(bytes.Buffer) }}
-	md      goldmark.Markdown
+	bufPool    = sync.Pool{New: func() any { return new(bytes.Buffer) }}
+	md         goldmark.Markdown
+	initRender sync.Once
 )
 
 // MarkdownEx exposes the template function "markdown_ex" which uses a custom markdown renderer that
@@ -53,6 +54,8 @@ func funcMarkdown(input any) (string, error) {
 	defer bufPool.Put(buf)
 	buf.Reset()
 
+	initRender.Do(func() { configureRenderer("") })
+
 	err := md.Convert([]byte(inputStr), buf)
 	if err != nil {
 		return "", err
@@ -61,22 +64,7 @@ func funcMarkdown(input any) (string, error) {
 	return buf.String(), nil
 }
 
-func unmarshalCaddyfile(d *caddyfile.Dispenser, _ any) (any, error) {
-	mermaidJS := ""
-	if d.Next() {
-		for d.NextBlock(0) {
-			switch d.Val() {
-			case "MermaidJS":
-				if !d.NextArg() {
-					return nil, d.ArgErr()
-				}
-				mermaidJS = d.Val()
-			default:
-				return nil, d.ArgErr()
-			}
-		}
-	}
-
+func configureRenderer(mermaidJS string) {
 	md = goldmark.New(
 		goldmark.WithExtensions(
 			extension.Footnote,
@@ -98,6 +86,31 @@ func unmarshalCaddyfile(d *caddyfile.Dispenser, _ any) (any, error) {
 			gmhtml.WithUnsafe(),
 		),
 	)
+}
+
+func unmarshalCaddyfile(d *caddyfile.Dispenser, _ any) (any, error) {
+	mermaidJS := ""
+	if d.Next() {
+		for d.NextBlock(0) {
+			switch d.Val() {
+			case "MermaidJS":
+				if !d.NextArg() {
+					return nil, d.ArgErr()
+				}
+				mermaidJS = d.Val()
+			default:
+				return nil, d.ArgErr()
+			}
+		}
+	}
+
+	if md == nil {
+		// init
+		initRender.Do(func() { configureRenderer(mermaidJS) })
+	} else {
+		// reload
+		configureRenderer(mermaidJS)
+	}
 
 	return struct{}{}, nil
 }
