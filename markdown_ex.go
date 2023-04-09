@@ -67,6 +67,7 @@ func funcMarkdown(input any) (string, error) {
 func configureRenderer(mermaidJS string) {
 	md = goldmark.New(
 		goldmark.WithExtensions(
+			extension.GFM,
 			extension.Footnote,
 			highlighting.NewHighlighting(
 				highlighting.WithFormatOptions(
