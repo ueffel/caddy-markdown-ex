@@ -42,18 +42,35 @@ renderer that, in addition to the default markdown renderer (template function
 xcaddy build --with github.com/ueffel/caddy-markdown-ex
 ```
 
+The latest version of this module needs caddy v2.7.6 or above.
+
 ## Configuration
+
+As of <https://github.com/caddyserver/caddy/pull/5939> to use a new template
+function it needs to be configured as extension.
+
+```caddy-d
+templates {
+    extensions {
+        markdown_ex
+    }
+}
+```
 
 Mermaid support needs a javascript file in order to render the diagrams
 client-side. This script is loaded by default from
 <https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js>
 
 There is the option to change the source path of this script to serve the file
-from your own domain with the following global with a Caddyfile:
+from your own domain with the following in a Caddyfile:
 
 ```caddy-d
-markdown_ex {
-    MermaidJS /mermaid.min.js
+templates {
+    extensions {
+        markdown_ex {
+            mermaid_js /mermaid.min.js
+        }
+    }
 }
 ```
 

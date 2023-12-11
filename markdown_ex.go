@@ -8,7 +8,6 @@ import (
 	"github.com/alecthomas/chroma/v2/formatters/html"
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
-	"github.com/caddyserver/caddy/v2/caddyconfig/httpcaddyfile"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp/templates"
 	"github.com/ueffel/mdtohtml/tasklistitem"
 	"github.com/yuin/goldmark"
@@ -16,20 +15,19 @@ import (
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	gmhtml "github.com/yuin/goldmark/renderer/html"
-	mermaid "go.abhg.dev/goldmark/mermaid"
+	"go.abhg.dev/goldmark/mermaid"
 )
 
-var (
-	bufPool    = sync.Pool{New: func() any { return new(bytes.Buffer) }}
-	md         goldmark.Markdown
-	initRender sync.Once
-)
+var bufPool = sync.Pool{New: func() any { return new(bytes.Buffer) }}
 
 // MarkdownEx exposes the template function "markdown_ex" which uses a custom markdown renderer that
 // includes
 //   - the html class "task-list-item" for item if a TaskList
 //   - support for mermaidJS syntax
-type MarkdownEx struct{}
+type MarkdownEx struct {
+	md        goldmark.Markdown
+	MermaidJS string `json:"mermaid_js"`
+}
 
 // CaddyModule returns the Caddy module information.
 func (MarkdownEx) CaddyModule() caddy.ModuleInfo {
@@ -40,32 +38,28 @@ func (MarkdownEx) CaddyModule() caddy.ModuleInfo {
 }
 
 // CustomTemplateFunctions should return the mapping from custom function names to implementations.
-func (m *MarkdownEx) CustomTemplateFunctions() template.FuncMap {
-	return template.FuncMap{"markdown_ex": funcMarkdown}
-}
-
-// funcMarkdown uses a custom markdown renderer that includes
+// markdown_ex uses a custom markdown renderer that includes
 //   - the html class "task-list-item" for items of a TaskList
 //   - support for mermaidJS syntax
-func funcMarkdown(input any) (string, error) {
-	inputStr := caddy.ToString(input)
+func (m *MarkdownEx) CustomTemplateFunctions() template.FuncMap {
+	return template.FuncMap{"markdown_ex": func(input any) (string, error) {
+		inputStr := caddy.ToString(input)
 
-	buf := bufPool.Get().(*bytes.Buffer)
-	defer bufPool.Put(buf)
-	buf.Reset()
+		buf := bufPool.Get().(*bytes.Buffer)
+		defer bufPool.Put(buf)
+		buf.Reset()
 
-	initRender.Do(func() { configureRenderer("") })
+		err := m.md.Convert([]byte(inputStr), buf)
+		if err != nil {
+			return "", err
+		}
 
-	err := md.Convert([]byte(inputStr), buf)
-	if err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
+		return buf.String(), nil
+	}}
 }
 
-func configureRenderer(mermaidJS string) {
-	md = goldmark.New(
+func (m *MarkdownEx) Provision(ctx caddy.Context) error {
+	m.md = goldmark.New(
 		goldmark.WithExtensions(
 			extension.GFM,
 			extension.Footnote,
@@ -78,7 +72,7 @@ func configureRenderer(mermaidJS string) {
 			extension.Strikethrough,
 			extension.TaskList,
 			tasklistitem.TaskListItemClass,
-			&mermaid.Extender{MermaidJS: mermaidJS},
+			&mermaid.Extender{MermaidURL: m.MermaidJS},
 		),
 		goldmark.WithParserOptions(
 			parser.WithAutoHeadingID(),
@@ -87,38 +81,28 @@ func configureRenderer(mermaidJS string) {
 			gmhtml.WithUnsafe(),
 		),
 	)
+	return nil
 }
 
-func unmarshalCaddyfile(d *caddyfile.Dispenser, _ any) (any, error) {
-	mermaidJS := ""
-	if d.Next() {
-		for d.NextBlock(0) {
+func (m *MarkdownEx) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
+	for d.Next() {
+		for nesting := d.Nesting(); d.NextBlock(nesting); {
 			switch d.Val() {
-			case "MermaidJS":
+			case "mermaid_js":
 				if !d.NextArg() {
-					return nil, d.ArgErr()
+					return d.ArgErr()
 				}
-				mermaidJS = d.Val()
+				m.MermaidJS = d.Val()
 			default:
-				return nil, d.ArgErr()
+				return d.ArgErr()
 			}
 		}
 	}
-
-	if md == nil {
-		// init
-		initRender.Do(func() { configureRenderer(mermaidJS) })
-	} else {
-		// reload
-		configureRenderer(mermaidJS)
-	}
-
-	return struct{}{}, nil
+	return nil
 }
 
 // init registers the caddy module and the markdown_ex directive.
 func init() {
-	httpcaddyfile.RegisterGlobalOption("markdown_ex", unmarshalCaddyfile)
 	caddy.RegisterModule(MarkdownEx{})
 }
 
@@ -126,4 +110,6 @@ func init() {
 var (
 	_ caddy.Module              = (*MarkdownEx)(nil)
 	_ templates.CustomFunctions = (*MarkdownEx)(nil)
+	_ caddyfile.Unmarshaler     = (*MarkdownEx)(nil)
+	_ caddy.Provisioner         = (*MarkdownEx)(nil)
 )
