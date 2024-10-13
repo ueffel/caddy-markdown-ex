@@ -3,10 +3,10 @@ module github.com/ueffel/caddy-markdown-ex
 go 1.20
 
 require (
-	github.com/alecthomas/chroma/v2 v2.12.0
+	github.com/alecthomas/chroma/v2 v2.14.0
 	github.com/caddyserver/caddy/v2 v2.7.6
 	github.com/ueffel/mdtohtml v0.0.0-20230409182101-57bc36e455d5
-	github.com/yuin/goldmark v1.6.0
+	github.com/yuin/goldmark v1.7.6
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/mermaid v0.5.0
 )
@@ -31,7 +31,7 @@ require (
 	github.com/dgraph-io/badger/v2 v2.2007.4 // indirect
 	github.com/dgraph-io/ristretto v0.1.0 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
-	github.com/dlclark/regexp2 v1.10.0 // indirect
+	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-kit/kit v0.10.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
