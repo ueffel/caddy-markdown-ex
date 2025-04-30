@@ -96,6 +96,6 @@ directive](https://caddyserver.com/docs/caddyfile/directives/templates#templates
 I created this module just for myself but feel free to use it.
 
 You can also fork the repository and configure your own markdown renderer to
-your liking in `unmarshalCaddyfile`. The [goldmark
+your liking in `Provision`. The [goldmark
 renderer](https://github.com/yuin/goldmark), which is used by this module and
 caddy's default `markdown` function, has excellent extensibility.
