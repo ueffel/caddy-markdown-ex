@@ -1,9 +1,9 @@
 module github.com/ueffel/caddy-markdown-ex
 
-go 1.24
+go 1.25
 
 require (
-	github.com/alecthomas/chroma/v2 v2.23.1
+	github.com/alecthomas/chroma/v2 v2.26.1
 	github.com/caddyserver/caddy/v2 v2.10.0
 	github.com/ueffel/mdtohtml v0.0.0-20230409182101-57bc36e455d5
 	github.com/yuin/goldmark v1.8.2
@@ -36,7 +36,7 @@ require (
 	github.com/dgraph-io/badger/v2 v2.2007.4 // indirect
 	github.com/dgraph-io/ristretto v0.2.0 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
-	github.com/dlclark/regexp2 v1.11.5 // indirect
+	github.com/dlclark/regexp2/v2 v2.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/francoispqt/gojay v1.2.13 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
